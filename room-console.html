@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แผงควบคุมห้อง</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1B2422;
+    --panel: #212B28;
+    --panel-raised: #26312D;
+    --line: #34423D;
+    --text: #E8E4D9;
+    --muted: #8FA39A;
+    --accent: #C08A3E;
+    --accent-glow: #E8B565;
+    --lamp-off: #3B4844;
+    --danger: #B4573F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans Thai', 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px 60px;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .room-name {
+    font-family: 'Source Serif 4', serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  .gear-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    width: 34px; height: 34px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color .15s, color .15s;
+  }
+  .gear-btn:hover { color: var(--text); border-color: var(--muted); }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 28px 24px;
+    margin-bottom: 18px;
+  }
+
+  /* Hero: occupancy gauge */
+  .gauge {
+    text-align: center;
+    padding: 20px 0 8px;
+  }
+
+  .lamp {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--lamp-off);
+    margin: 0 auto 22px;
+    box-shadow: none;
+    transition: background .3s, box-shadow .3s;
+  }
+  .lamp.lit {
+    background: var(--accent-glow);
+    box-shadow: 0 0 10px 3px rgba(232,181,101,0.55), 0 0 26px 10px rgba(232,181,101,0.18);
+    animation: pulse 2.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 10px 3px rgba(232,181,101,0.55), 0 0 26px 10px rgba(232,181,101,0.18); }
+    50% { box-shadow: 0 0 14px 4px rgba(232,181,101,0.75), 0 0 34px 14px rgba(232,181,101,0.28); }
+  }
+
+  .count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 76px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -1px;
+    transition: transform .18s ease;
+  }
+  .count.bump { transform: scale(1.08); }
+
+  .count-label {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 10px;
+  }
+
+  .conn-note {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 18px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .conn-note.err { color: var(--danger); }
+
+  /* Voice console */
+  .console-title {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .console-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .mic-btn {
+    flex: 0 0 auto;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--panel-raised);
+    color: var(--text);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color .15s, background .15s;
+  }
+  .mic-btn:hover { border-color: var(--accent); }
+  .mic-btn.listening {
+    background: var(--danger);
+    border-color: var(--danger);
+    animation: pulse-mic 1.1s ease-in-out infinite;
+  }
+  @keyframes pulse-mic {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(180,87,63,0.5); }
+    50% { box-shadow: 0 0 0 8px rgba(180,87,63,0); }
+  }
+
+  .cmd-input {
+    flex: 1;
+    background: var(--panel-raised);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 0 14px;
+    font-size: 15px;
+    font-family: inherit;
+  }
+  .cmd-input:focus { outline: none; border-color: var(--accent); }
+
+  .send-btn {
+    flex: 0 0 auto;
+    padding: 0 18px;
+    border-radius: 8px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent-glow);
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .send-btn:hover { background: rgba(192,138,62,0.12); }
+  .send-btn:disabled { opacity: .4; cursor: default; }
+
+  .llm-reply {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--muted);
+    min-height: 18px;
+  }
+  .llm-reply strong { color: var(--text); font-weight: 500; }
+
+  /* Log */
+  .log-title {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .log-list { list-style: none; margin: 0; padding: 0; }
+  .log-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-top: 1px solid var(--line);
+    font-size: 14px;
+  }
+  .log-list li:first-child { border-top: none; }
+  .log-time { font-family: 'IBM Plex Mono', monospace; color: var(--muted); font-size: 13px; }
+  .log-event.in { color: var(--accent-glow); }
+  .log-event.out { color: var(--muted); }
+  .log-empty { color: var(--muted); font-size: 13px; padding: 6px 0; }
+
+  /* Settings drawer */
+  .settings {
+    display: none;
+    margin-bottom: 18px;
+  }
+  .settings.open { display: block; }
+  .field {
+    margin-bottom: 12px;
+  }
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+  .field input {
+    width: 100%;
+    background: var(--panel-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 9px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+  }
+  .field input:focus { outline: none; border-color: var(--accent); }
+  .settings-note {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: 10px;
+  }
+  .save-btn {
+    margin-top: 4px;
+    padding: 9px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #1B2422;
+    font-weight: 600;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="room-name">ห้องประชุม A</div>
+    <button class="gear-btn" id="gearBtn" title="ตั้งค่าการเชื่อมต่อ">⚙</button>
+  </header>
+
+  <div class="settings" id="settingsPanel">
+    <div class="panel">
+      <div class="field">
+        <label>Supabase Project URL (เช่น https://xxxx.supabase.co)</label>
+        <input id="cfgSupaUrl" placeholder="https://xxxx.supabase.co">
+      </div>
+      <div class="field">
+        <label>Supabase API Key (anon key)</label>
+        <input id="cfgSupaKey" placeholder="eyJhbGciOi...">
+      </div>
+      <div class="field">
+        <label>ESP32 IP Address (ในเครือข่ายเดียวกัน)</label>
+        <input id="cfgEspIp" placeholder="192.168.1.50">
+      </div>
+      <button class="save-btn" id="saveCfgBtn">บันทึกการตั้งค่า</button>
+      <div class="settings-note">
+        ค่าที่บันทึกจะอยู่ในหน้านี้ชั่วคราวเท่านั้น หากรีเฟรชหน้าต้องกรอกใหม่
+        การสั่งงาน LED ต้องให้เบราว์เซอร์อยู่ในวง LAN เดียวกับ ESP32
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="gauge">
+      <div class="lamp" id="lamp"></div>
+      <div class="count" id="countDisplay">–</div>
+      <div class="count-label">คนในห้องขณะนี้</div>
+    </div>
+    <div class="conn-note" id="connNote">ยังไม่ได้ตั้งค่าการเชื่อมต่อ — กด ⚙ ด้านบน</div>
+  </div>
+
+  <div class="panel">
+    <div class="console-title">สั่งงานด้วยเสียงหรือพิมพ์คำสั่ง (เช่น "เปิดไฟ", "ปิดไฟหน่อย")</div>
+    <div class="console-row">
+      <button class="mic-btn" id="micBtn" title="กดเพื่อพูดคำสั่ง">🎙</button>
+      <input class="cmd-input" id="cmdInput" placeholder="พิมพ์คำสั่งที่นี่แล้วกด Enter">
+      <button class="send-btn" id="sendBtn">ส่ง</button>
+    </div>
+    <div class="llm-reply" id="llmReply"></div>
+  </div>
+
+  <div class="panel">
+    <div class="log-title">บันทึกล่าสุด</div>
+    <ul class="log-list" id="logList">
+      <li class="log-empty">ยังไม่มีการเปลี่ยนแปลง</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+  let SUPABASE_URL = "";
+  let SUPABASE_KEY = "";
+  let ESP32_IP = "";
+  let lastCount = null;
+  let pollTimer = null;
+
+  const countDisplay = document.getElementById('countDisplay');
+  const lamp = document.getElementById('lamp');
+  const connNote = document.getElementById('connNote');
+  const logList = document.getElementById('logList');
+  const gearBtn = document.getElementById('gearBtn');
+  const settingsPanel = document.getElementById('settingsPanel');
+  const saveCfgBtn = document.getElementById('saveCfgBtn');
+  const cmdInput = document.getElementById('cmdInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const micBtn = document.getElementById('micBtn');
+  const llmReply = document.getElementById('llmReply');
+
+  gearBtn.addEventListener('click', () => settingsPanel.classList.toggle('open'));
+
+  saveCfgBtn.addEventListener('click', () => {
+    SUPABASE_URL = document.getElementById('cfgSupaUrl').value.trim().replace(/\/$/, '');
+    SUPABASE_KEY = document.getElementById('cfgSupaKey').value.trim();
+    ESP32_IP = document.getElementById('cfgEspIp').value.trim();
+    settingsPanel.classList.remove('open');
+    startPolling();
+  });
+
+  function addLogEntry(type, count) {
+    const empty = logList.querySelector('.log-empty');
+    if (empty) empty.remove();
+    const li = document.createElement('li');
+    const time = new Date().toLocaleTimeString('th-TH', { hour12: false });
+    li.innerHTML = `<span class="log-time">${time}</span>
+      <span class="log-event ${type === 'in' ? 'in' : 'out'}">${type === 'in' ? 'มีคนเข้า' : 'มีคนออก'} → รวม ${count} คน</span>`;
+    logList.prepend(li);
+    while (logList.children.length > 8) logList.removeChild(logList.lastChild);
+  }
+
+  async function pollOccupancy() {
+    if (!SUPABASE_URL || !SUPABASE_KEY) return;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/room_status?id=eq.1&select=count`, {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const count = data && data[0] ? data[0].count : 0;
+
+      if (lastCount !== null && count !== lastCount) {
+        addLogEntry(count > lastCount ? 'in' : 'out', count);
+      }
+      lastCount = count;
+
+      countDisplay.textContent = count;
+      countDisplay.classList.add('bump');
+      setTimeout(() => countDisplay.classList.remove('bump'), 180);
+
+      lamp.classList.toggle('lit', count > 0);
+      connNote.textContent = 'เชื่อมต่อ Supabase สำเร็จ · อัปเดตทุก 3 วินาที';
+      connNote.classList.remove('err');
+    } catch (err) {
+      connNote.textContent = 'เชื่อมต่อ Supabase ไม่สำเร็จ: ' + err.message;
+      connNote.classList.add('err');
+    }
+  }
+
+  function startPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollOccupancy();
+    pollTimer = setInterval(pollOccupancy, 3000);
+  }
+
+  // ---------- LLM intent parsing (Anthropic API) ----------
+  async function interpretCommand(text) {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{
+          role: "user",
+          content: `ผู้ใช้พูดว่า: "${text}"
+ตีความว่าผู้ใช้ต้องการเปิดไฟ ปิดไฟ หรือไม่เกี่ยวกับไฟ
+ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นใดๆ ห้ามใส่ markdown code fence รูปแบบ:
+{"action": "led_on" | "led_off" | "none", "reply_th": "ประโยคสั้นๆ ตอบกลับผู้ใช้เป็นภาษาไทย"}`
+        }]
+      })
+    });
+    const data = await response.json();
+    const raw = data.content.map(b => b.text || "").join("").trim();
+    const cleaned = raw.replace(/```json|```/g, "").trim();
+    return JSON.parse(cleaned);
+  }
+
+  async function handleCommand(text) {
+    if (!text) return;
+    llmReply.textContent = "กำลังตีความคำสั่ง...";
+    sendBtn.disabled = true;
+    try {
+      const result = await interpretCommand(text);
+
+      if (result.action === 'led_on' || result.action === 'led_off') {
+        if (!ESP32_IP) {
+          llmReply.innerHTML = `<strong>${result.reply_th}</strong> (แต่ยังไม่ได้ตั้งค่า IP ของ ESP32)`;
+        } else {
+          const state = result.action === 'led_on' ? 'on' : 'off';
+          const espRes = await fetch(`http://${ESP32_IP}/led?state=${state}`);
+          const espText = await espRes.text();
+          llmReply.innerHTML = `<strong>${result.reply_th}</strong> — ESP32: ${espText}`;
+        }
+      } else {
+        llmReply.innerHTML = `<strong>${result.reply_th}</strong>`;
+      }
+    } catch (err) {
+      llmReply.textContent = "เกิดข้อผิดพลาดในการตีความคำสั่ง: " + err.message;
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+
+  sendBtn.addEventListener('click', () => {
+    handleCommand(cmdInput.value.trim());
+    cmdInput.value = '';
+  });
+  cmdInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      handleCommand(cmdInput.value.trim());
+      cmdInput.value = '';
+    }
+  });
+
+  // ---------- Voice input (Web Speech API, browser-side, ไม่ต้องใช้ LLM แปลงเสียง) ----------
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognizer = null;
+  if (SpeechRecognition) {
+    recognizer = new SpeechRecognition();
+    recognizer.lang = 'th-TH';
+    recognizer.interimResults = false;
+    recognizer.maxAlternatives = 1;
+
+    recognizer.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      cmdInput.value = transcript;
+      handleCommand(transcript);
+    };
+    recognizer.onend = () => micBtn.classList.remove('listening');
+    recognizer.onerror = () => micBtn.classList.remove('listening');
+
+    micBtn.addEventListener('click', () => {
+      micBtn.classList.add('listening');
+      recognizer.start();
+    });
+  } else {
+    micBtn.disabled = true;
+    micBtn.title = "เบราว์เซอร์นี้ไม่รองรับการรับเสียง ลองใช้ Chrome";
+  }
+</script>
+</body>
+</html>
