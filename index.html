@@ -379,7 +379,7 @@
       setTimeout(() => countDisplay.classList.remove('bump'), 180);
 
       lamp.classList.toggle('lit', count > 0);
-      connNote.textContent = 'เชื่อมต่อ Supabase สำเร็จ · อัปเดตทุก 3 วินาที';
+      connNote.textContent = 'เชื่อมต่อ Supabase สำเร็จ · อัปเดตทุก 1 วินาที';
       connNote.classList.remove('err');
     } catch (err) {
       connNote.textContent = 'เชื่อมต่อ Supabase ไม่สำเร็จ: ' + err.message;
@@ -390,7 +390,7 @@
   function startPolling() {
     if (pollTimer) clearInterval(pollTimer);
     pollOccupancy();
-    pollTimer = setInterval(pollOccupancy, 3000);
+    pollTimer = setInterval(pollOccupancy, 1000);
   }
 
   // ---------- LLM intent parsing (Anthropic API) ----------
