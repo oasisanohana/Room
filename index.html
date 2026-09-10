@@ -1,1730 +1,1152 @@
 <!DOCTYPE html>
-
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Smart Room A</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
-<style>
-
-:root {
-  --bg: #1B2422;
-  --panel: #212B28;
-  --panel-raised: #26312D;
-  --line: #34423D;
-
-  --text: #E8E4D9;
-  --muted: #8FA39A;
-
-  --accent: #C08A3E;
-  --accent-glow: #E8B565;
-
-  --lamp-off: #3B4844;
-  --danger: #B4573F;
-
-  --green: #6FAF82;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-
-  background:
-    radial-gradient(circle at top, #26332F 0%, var(--bg) 45%);
-
-  color: var(--text);
-
-  font-family:
-    'IBM Plex Sans Thai',
-    sans-serif;
-
-  min-height: 100vh;
-
-  padding:
-    30px 15px 60px;
-}
-
-.wrap {
-  width: 100%;
-  max-width: 620px;
-  margin: auto;
-}
-
-/* HEADER */
-
-header {
-
-  display: flex;
-
-  align-items: center;
-  justify-content: space-between;
-
-  margin-bottom: 22px;
-}
-
-.room-name {
-
-  font-family:
-    'Source Serif 4',
-    serif;
-
-  font-size: 24px;
-
-  font-weight: 600;
-}
-
-.subtitle {
-
-  font-size: 11px;
-
-  color: var(--muted);
-
-  margin-top: 2px;
-}
-
-.gear-btn {
-
-  background: none;
-
-  border: 1px solid var(--line);
-
-  color: var(--muted);
-
-  width: 38px;
-  height: 38px;
-
-  border-radius: 8px;
-
-  cursor: pointer;
-
-  font-size: 18px;
-
-  transition: .2s;
-}
-
-.gear-btn:hover {
-
-  color: var(--text);
-
-  border-color: var(--accent);
-}
-
-/* PANEL */
-
-.panel {
-
-  background: var(--panel);
-
-  border:
-    1px solid var(--line);
-
-  border-radius: 12px;
-
-  padding: 24px;
-
-  margin-bottom: 16px;
-
-  box-shadow:
-    0 8px 30px rgba(0,0,0,.12);
-}
-
-/* OCCUPANCY */
-
-.gauge {
-
-  text-align: center;
-
-  padding: 15px 0;
-}
-
-.lamp {
-
-  width: 15px;
-  height: 15px;
-
-  border-radius: 50%;
-
-  background: var(--lamp-off);
-
-  margin:
-    0 auto 20px;
-
-  transition: .3s;
-}
-
-.lamp.lit {
-
-  background: var(--accent-glow);
-
-  box-shadow:
-    0 0 12px 4px rgba(232,181,101,.55),
-    0 0 30px 12px rgba(232,181,101,.18);
-
-  animation:
-    pulse 2.5s infinite;
-}
-
-@keyframes pulse {
-
-  0%,100% {
-    box-shadow:
-      0 0 10px 3px rgba(232,181,101,.5),
-      0 0 25px 10px rgba(232,181,101,.15);
-  }
-
-  50% {
-    box-shadow:
-      0 0 16px 5px rgba(232,181,101,.75),
-      0 0 35px 15px rgba(232,181,101,.25);
-  }
-}
-
-.count {
-
-  font-family:
-    'IBM Plex Mono',
-    monospace;
-
-  font-size: 78px;
-
-  line-height: 1;
-
-  transition: .2s;
-}
-
-.count.bump {
-
-  transform:
-    scale(1.08);
-}
-
-.count-label {
-
-  color: var(--muted);
-
-  margin-top: 9px;
-
-  font-size: 14px;
-}
-
-/* VOICE */
-
-.section-title {
-
-  font-size: 13px;
-
-  color: var(--muted);
-
-  margin-bottom: 15px;
-}
-
-.voice-area {
-
-  text-align: center;
-
-  padding:
-    10px 0 5px;
-}
-
-.mic-btn {
-
-  width: 75px;
-  height: 75px;
-
-  border-radius: 50%;
-
-  border:
-    1px solid var(--line);
-
-  background:
-    var(--panel-raised);
-
-  color: var(--text);
-
-  font-size: 30px;
-
-  cursor: pointer;
-
-  transition: .2s;
-}
-
-.mic-btn:hover {
-
-  border-color:
-    var(--accent);
-
-  transform:
-    scale(1.04);
-}
-
-.mic-btn.listening {
-
-  background:
-    var(--danger);
-
-  border-color:
-    var(--danger);
-
-  animation:
-    micPulse 1.1s infinite;
-}
-
-@keyframes micPulse {
-
-  0%,100% {
-    box-shadow:
-      0 0 0 0 rgba(180,87,63,.5);
-  }
-
-  50% {
-    box-shadow:
-      0 0 0 12px rgba(180,87,63,0);
-  }
-}
-
-.voice-status {
-
-  margin-top: 12px;
-
-  font-size: 12px;
-
-  color: var(--muted);
-}
-
-.command-box {
-
-  display: flex;
-
-  gap: 8px;
-
-  margin-top: 18px;
-}
-
-.command-input {
-
-  flex: 1;
-
-  background:
-    var(--panel-raised);
-
-  border:
-    1px solid var(--line);
-
-  color: var(--text);
-
-  border-radius: 8px;
-
-  padding:
-    12px;
-
-  font-family: inherit;
-
-  font-size: 14px;
-}
-
-.command-input:focus {
-
-  outline: none;
-
-  border-color:
-    var(--accent);
-}
-
-.send-btn {
-
-  border:
-    1px solid var(--accent);
-
-  background:
-    transparent;
-
-  color:
-    var(--accent-glow);
-
-  border-radius: 8px;
-
-  padding:
-    0 17px;
-
-  cursor: pointer;
-}
-
-.send-btn:hover {
-
-  background:
-    rgba(192,138,62,.12);
-}
-
-.ai-reply {
-
-  margin-top: 14px;
-
-  font-size: 13px;
-
-  color: var(--muted);
-
-  min-height: 20px;
-}
-
-/* LOG */
-
-.log-title {
-
-  color: var(--muted);
-
-  font-size: 13px;
-
-  margin-bottom: 10px;
-}
-
-.log-list {
-
-  list-style: none;
-
-  margin: 0;
-  padding: 0;
-}
-
-.log-list li {
-
-  display: flex;
-
-  justify-content: space-between;
-
-  padding:
-    9px 0;
-
-  border-top:
-    1px solid var(--line);
-
-  font-size: 13px;
-}
-
-.log-time {
-
-  font-family:
-    'IBM Plex Mono',
-    monospace;
-
-  color: var(--muted);
-}
-
-.log-empty {
-
-  color: var(--muted);
-}
-
-/* SETTINGS */
-
-.settings {
-
-  display: none;
-}
-
-.settings.open {
-
-  display: block;
-}
-
-.field {
-
-  margin-bottom: 13px;
-}
-
-.field label {
-
-  display: block;
-
-  font-size: 12px;
-
-  color: var(--muted);
-
-  margin-bottom: 6px;
-}
-
-.field input {
-
-  width: 100%;
-
-  background:
-    var(--panel-raised);
-
-  border:
-    1px solid var(--line);
-
-  border-radius: 7px;
-
-  color: var(--text);
-
-  padding:
-    10px;
-
-  font-family:
-    'IBM Plex Mono',
-    monospace;
-
-  font-size: 12px;
-}
-
-.field input:focus {
-
-  outline: none;
-
-  border-color:
-    var(--accent);
-}
-
-.save-btn {
-
-  margin-top: 5px;
-
-  padding:
-    10px 17px;
-
-  border-radius: 7px;
-
-  border: none;
-
-  background:
-    var(--accent);
-
-  color:
-    #1B2422;
-
-  font-weight: 600;
-
-  cursor: pointer;
-}
-
-.note {
-
-  margin-top: 12px;
-
-  font-size: 11px;
-
-  line-height: 1.6;
-
-  color: var(--muted);
-}
-
-/* MOBILE */
-
-@media(max-width:480px) {
-
-  body {
-    padding:
-      20px 10px 40px;
-  }
-
-  .panel {
-    padding:
-      20px 17px;
-  }
-
-  .count {
-    font-size: 65px;
-  }
-
-  .command-box {
-    flex-wrap: wrap;
-  }
-
-  .command-input {
-    width: 100%;
-    flex-basis: 100%;
-  }
-
-  .send-btn {
-    height: 42px;
-    width: 100%;
-  }
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Control ESP32</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, "Noto Sans Thai", sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .container {
+            width: min(900px, 94%);
+            margin: 30px auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 18px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 20px;
+        }
+
+        label {
+            display: block;
+            margin-top: 14px;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #2563eb;
+        }
+
+        button {
+            border: none;
+            border-radius: 10px;
+            padding: 12px 18px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        .save {
+            background: #2563eb;
+            color: white;
+        }
+
+        .test {
+            background: #0f766e;
+            color: white;
+            margin-left: 8px;
+        }
+
+        .voice {
+            width: 100%;
+            padding: 20px;
+            font-size: 20px;
+            background: #7c3aed;
+            color: white;
+        }
+
+        .voice.listening {
+            background: #dc2626;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            50% {
+                transform: scale(1.02);
+            }
+        }
+
+        .send {
+            background: #16a34a;
+            color: white;
+            width: 100%;
+            font-size: 18px;
+        }
+
+        .off {
+            background: #475569;
+            color: white;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .status-box {
+            padding: 18px;
+            border-radius: 14px;
+            background: #f8fafc;
+            text-align: center;
+        }
+
+        .status-title {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .status-value {
+            font-size: 25px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .online {
+            color: #16a34a;
+        }
+
+        .offline {
+            color: #dc2626;
+        }
+
+        .ai-result {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 15px;
+            line-height: 1.7;
+        }
+
+        .command {
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+        .log {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 12px;
+            height: 180px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .warning {
+            background: #fff7ed;
+            border-left: 5px solid #f97316;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            color: #9a3412;
+        }
+
+        @media (max-width: 650px) {
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .test {
+                margin-left: 0;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="wrap">
+<div class="container">
 
-<!-- HEADER -->
+    <h1>🤖 AI ควบคุม ESP32</h1>
+    <div class="subtitle">
+        พูดภาษาไทย → Gemini วิเคราะห์ → ESP32 ควบคุมไฟ
+    </div>
 
-<header>
 
-  <div>
+    <!-- ================= SETTINGS ================= -->
 
+    <div class="card">
 
-<div class="room-name">
-  ห้องประชุม A
-</div>
+        <h2>⚙️ ตั้งค่า</h2>
 
-<div class="subtitle">
-  SMART ROOM · VOICE AI
-</div>
+        <label>Gemini API Key</label>
 
+        <input
+            type="password"
+            id="apiKey"
+            placeholder="ใส่ Gemini API Key"
+        >
 
-  </div>
+        <label>ESP32 IP / URL</label>
 
-<button
- class="gear-btn"
- id="gearBtn"
- title="ตั้งค่า">
-⚙ </button>
+        <input
+            type="text"
+            id="esp32Url"
+            placeholder="เช่น http://192.168.1.100"
+        >
 
-</header>
+        <button class="save" onclick="saveSettings()">
+            💾 บันทึกการตั้งค่า
+        </button>
 
-<!-- SETTINGS -->
+        <button class="test" onclick="checkESP32()">
+            📡 ตรวจสอบ ESP32
+        </button>
 
-<div
-  class="settings"
-  id="settingsPanel">
+        <div class="warning">
+            ⚠️ API Key จะถูกเก็บไว้ใน Local Storage ของเบราว์เซอร์
+            เหมาะสำหรับเว็บทดลองส่วนตัว ไม่ควรเผยแพร่ไฟล์นี้แบบสาธารณะ
+        </div>
 
-  <div class="panel">
+    </div>
 
 
-<div class="section-title">
-  ตั้งค่าการเชื่อมต่อ
-</div>
+    <!-- ================= STATUS ================= -->
 
-<div class="field">
+    <div class="card">
 
-  <label>
-    Supabase Project URL
-  </label>
+        <h2>📊 สถานะระบบ</h2>
 
-  <input
-    id="cfgSupaUrl"
-    placeholder="https://xxxx.supabase.co">
+        <div class="status-grid">
 
-</div>
+            <div class="status-box">
+                <div class="status-title">
+                    ESP32
+                </div>
 
-<div class="field">
+                <div
+                    id="espStatus"
+                    class="status-value offline"
+                >
+                    🔴 Offline
+                </div>
+            </div>
 
-  <label>
-    Supabase Anon Key
-  </label>
 
-  <input
-    id="cfgSupaKey"
-    type="password"
-    placeholder="eyJhbGciOi...">
+            <div class="status-box">
 
-</div>
+                <div class="status-title">
+                    คนในห้อง
+                </div>
 
-<div class="field">
+                <div
+                    id="peopleCount"
+                    class="status-value"
+                >
+                    -
+                </div>
 
-  <label>
-    ESP32 IP Address
-  </label>
+            </div>
 
-  <input
-    id="cfgEspIp"
-    placeholder="192.168.1.50">
 
-</div>
+            <div class="status-box">
 
-<div class="field">
+                <div class="status-title">
+                    LED
+                </div>
 
-  <label>
-    AI Gateway URL
-  </label>
+                <div
+                    id="ledStatus"
+                    class="status-value"
+                >
+                    -
+                </div>
 
-  <input
-    id="cfgAiUrl"
-    placeholder="https://your-worker.workers.dev">
+            </div>
 
-</div>
+        </div>
 
-<button
-  class="save-btn"
-  id="saveCfgBtn">
+    </div>
 
-  บันทึกการตั้งค่า
 
-</button>
+    <!-- ================= VOICE ================= -->
 
-<div class="note">
+    <div class="card">
 
-  AI Gateway ใช้สำหรับเรียก LLM โดยไม่เปิดเผย API Key
-  บนหน้าเว็บ
+        <h2>🎤 สั่งงานด้วยเสียง</h2>
 
-  <br><br>
+        <button
+            id="voiceButton"
+            class="voice"
+            onclick="startVoice()"
+        >
+            🎤 กดเพื่อพูด
+        </button>
 
-  การสั่ง LED ต้องให้ Browser และ ESP32
-  อยู่ในเครือข่ายเดียวกัน
+        <label>ข้อความที่ได้ยิน</label>
 
-</div>
+        <input
+            id="speechText"
+            placeholder="เช่น ช่วยเปิดไฟให้หน่อย"
+        >
 
+        <button
+            class="send"
+            onclick="sendToAI()"
+        >
+            🤖 ส่งให้ AI วิเคราะห์
+        </button>
 
-  </div>
+    </div>
 
-</div>
 
-<!-- OCCUPANCY -->
+    <!-- ================= AI RESULT ================= -->
 
-<div class="panel">
+    <div class="card">
 
-  <div class="gauge">
+        <h2>🧠 ผลการวิเคราะห์ของ AI</h2>
 
+        <div class="ai-result">
 
-<div
-  class="lamp"
-  id="lamp">
-</div>
+            <div>
+                ข้อความ:
+                <strong id="aiText">-</strong>
+            </div>
 
-<div
-  class="count"
-  id="countDisplay">
-  –
-</div>
+            <div>
+                คำสั่ง:
+                <span
+                    id="aiCommand"
+                    class="command"
+                >
+                    -
+                </span>
+            </div>
 
-<div class="count-label">
-  คนในห้องขณะนี้
-</div>
+            <div>
+                เหตุผล:
+                <span id="aiReason">-</span>
+            </div>
 
+        </div>
 
-  </div>
 
-  <div
-    class="note"
-    id="connNote"
-    style="text-align:center">
+        <button
+            class="send"
+            onclick="executeCurrentCommand()"
+        >
+            ⚡ ทำตามคำสั่ง AI
+        </button>
 
+    </div>
 
-ยังไม่ได้ตั้งค่าการเชื่อมต่อ
 
+    <!-- ================= MANUAL ================= -->
 
-  </div>
+    <div class="card">
 
-</div>
+        <h2>💡 ควบคุมไฟด้วยตัวเอง</h2>
 
-<!-- VOICE AI -->
+        <button
+            class="send"
+            onclick="controlLED('on')"
+        >
+            💡 เปิดไฟ
+        </button>
 
-<div class="panel">
+        <button
+            class="off"
+            onclick="controlLED('off')"
+        >
+            🌑 ปิดไฟ
+        </button>
 
-  <div class="section-title">
-    🎙 VOICE AI
-  </div>
+    </div>
 
-  <div class="voice-area">
 
+    <!-- ================= LOG ================= -->
 
-<button
-  class="mic-btn"
-  id="micBtn"
-  title="กดเพื่อพูด">
+    <div class="card">
 
-  🎙
+        <h2>📜 Log ระบบ</h2>
 
-</button>
+        <div id="log" class="log"></div>
 
-<div
-  class="voice-status"
-  id="voiceStatus">
-
-  กดไมโครโฟนแล้วพูดคำสั่ง
-
-</div>
-
-
-  </div>
-
-  <div class="command-box">
-
-
-<input
-  class="command-input"
-  id="cmdInput"
-  placeholder="หรือพิมพ์ เช่น เปิดไฟ">
-
-<button
-  class="send-btn"
-  id="sendBtn">
-
-  ส่ง
-
-</button>
-
-
-  </div>
-
-  <div
-    class="ai-reply"
-    id="aiReply">
-  </div>
-
-</div>
-
-<!-- LOG -->
-
-<div class="panel">
-
-  <div class="log-title">
-    📝 บันทึกล่าสุด
-  </div>
-
-  <ul
-    class="log-list"
-    id="logList">
-
-
-<li class="log-empty">
-  ยังไม่มีการเปลี่ยนแปลง
-</li>
-
-
-  </ul>
+    </div>
 
 </div>
 
-</div>
 
 <script>
-
-/* =========================================================
-   CONFIG
-========================================================= */
-
-let SUPABASE_URL = "";
-let SUPABASE_KEY = "";
-
-let ESP32_IP = "";
-
-let AI_GATEWAY_URL = "";
-
-let lastCount = null;
-
-let pollTimer = null;
-
-
-/* =========================================================
-   ELEMENTS
-========================================================= */
-
-const countDisplay =
-  document.getElementById("countDisplay");
-
-const lamp =
-  document.getElementById("lamp");
-
-const connNote =
-  document.getElementById("connNote");
-
-const gearBtn =
-  document.getElementById("gearBtn");
-
-const settingsPanel =
-  document.getElementById("settingsPanel");
-
-const saveCfgBtn =
-  document.getElementById("saveCfgBtn");
-
-const cmdInput =
-  document.getElementById("cmdInput");
-
-const sendBtn =
-  document.getElementById("sendBtn");
-
-const micBtn =
-  document.getElementById("micBtn");
-
-const voiceStatus =
-  document.getElementById("voiceStatus");
-
-const aiReply =
-  document.getElementById("aiReply");
-
-const logList =
-  document.getElementById("logList");
-
 
 /* =========================================================
    SETTINGS
 ========================================================= */
 
-gearBtn.addEventListener(
-  "click",
-  () => {
+let API_KEY = localStorage.getItem("gemini_api_key") || "";
 
-    settingsPanel.classList.toggle(
-      "open"
-    );
-
-  }
-);
+let ESP32_URL = localStorage.getItem("esp32_url") || "";
 
 
-/* SAVE CONFIG */
+document.getElementById("apiKey").value = API_KEY;
 
-saveCfgBtn.addEventListener(
-  "click",
-  () => {
-
-    SUPABASE_URL =
-      document
-        .getElementById("cfgSupaUrl")
-        .value
-        .trim()
-        .replace(/\/$/, "");
-
-    SUPABASE_KEY =
-      document
-        .getElementById("cfgSupaKey")
-        .value
-        .trim();
-
-    ESP32_IP =
-      document
-        .getElementById("cfgEspIp")
-        .value
-        .trim();
-
-    AI_GATEWAY_URL =
-      document
-        .getElementById("cfgAiUrl")
-        .value
-        .trim()
-        .replace(/\/$/, "");
-
-
-    localStorage.setItem(
-      "smartroom_config",
-      JSON.stringify({
-        supabaseUrl: SUPABASE_URL,
-        supabaseKey: SUPABASE_KEY,
-        esp32Ip: ESP32_IP,
-        aiGateway: AI_GATEWAY_URL
-      })
-    );
-
-
-    settingsPanel.classList.remove(
-      "open"
-    );
-
-
-    startPolling();
-
-  }
-);
-
-
-/* LOAD CONFIG */
-
-function loadConfig() {
-
-  try {
-
-    const saved =
-      JSON.parse(
-        localStorage.getItem(
-          "smartroom_config"
-        )
-      );
-
-    if (!saved)
-      return;
-
-    SUPABASE_URL =
-      saved.supabaseUrl || "";
-
-    SUPABASE_KEY =
-      saved.supabaseKey || "";
-
-    ESP32_IP =
-      saved.esp32Ip || "";
-
-    AI_GATEWAY_URL =
-      saved.aiGateway || "";
-
-
-    document
-      .getElementById("cfgSupaUrl")
-      .value =
-      SUPABASE_URL;
-
-    document
-      .getElementById("cfgSupaKey")
-      .value =
-      SUPABASE_KEY;
-
-    document
-      .getElementById("cfgEspIp")
-      .value =
-      ESP32_IP;
-
-    document
-      .getElementById("cfgAiUrl")
-      .value =
-      AI_GATEWAY_URL;
-
-
-    startPolling();
-
-  }
-
-  catch (error) {
-
-    console.error(error);
-
-  }
-
-}
+document.getElementById("esp32Url").value = ESP32_URL;
 
 
 /* =========================================================
-   SUPABASE
+   AI COMMAND
 ========================================================= */
 
-async function pollOccupancy() {
-
-  if (!SUPABASE_URL ||
-      !SUPABASE_KEY)
-    return;
-
-
-  try {
-
-    const response =
-      await fetch(
-        `${SUPABASE_URL}/rest/v1/room_status?id=eq.1&select=count`,
-        {
-          headers: {
-
-            apikey:
-              SUPABASE_KEY,
-
-            Authorization:
-              `Bearer ${SUPABASE_KEY}`
-
-          }
-        }
-      );
-
-
-    if (!response.ok)
-      throw new Error(
-        "HTTP " + response.status
-      );
-
-
-    const data =
-      await response.json();
-
-
-    const count =
-      data && data[0]
-        ? Number(data[0].count)
-        : 0;
-
-
-    if (
-      lastCount !== null &&
-      count !== lastCount
-    ) {
-
-      addLogEntry(
-        count > lastCount
-          ? "in"
-          : "out",
-        count
-      );
-
-    }
-
-
-    lastCount = count;
-
-
-    countDisplay.textContent =
-      count;
-
-
-    countDisplay.classList.add(
-      "bump"
-    );
-
-
-    setTimeout(
-      () => {
-        countDisplay.classList.remove(
-          "bump"
-        );
-      },
-      180
-    );
-
-
-    lamp.classList.toggle(
-      "lit",
-      count > 0
-    );
-
-
-    connNote.textContent =
-      "Supabase เชื่อมต่อสำเร็จ · อัปเดตทุก 1 วินาที";
-
-    connNote.classList.remove(
-      "offline"
-    );
-
-
-  }
-
-  catch (error) {
-
-    connNote.textContent =
-      "Supabase เชื่อมต่อไม่สำเร็จ: "
-      + error.message;
-
-    connNote.classList.add(
-      "offline"
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   POLLING
-========================================================= */
-
-function startPolling() {
-
-  if (pollTimer)
-    clearInterval(pollTimer);
-
-
-  pollOccupancy();
-
-
-  pollTimer =
-    setInterval(
-      () => {
-
-        pollOccupancy();
-
-            },
-      1000
-    );
-
-}
-
-
-/* =========================================================
-   ESP32 LED
-========================================================= */
-
-async function controlLED(state) {
-
-  if (!ESP32_IP) {
-
-    throw new Error(
-      "ยังไม่ได้ตั้งค่า IP ของ ESP32"
-    );
-
-  }
-
-
-  const response =
-    await fetch(
-      `http://${ESP32_IP}/led?state=${state}`
-    );
-
-
-  const text =
-    await response.text();
-
-
-  if (!response.ok) {
-
-    throw new Error(text);
-
-  }
-
-
-  return text;
-
-}
-
-
-/* =========================================================
-   AI GATEWAY
-========================================================= */
-
-async function interpretCommand(text) {
-
-  if (!AI_GATEWAY_URL) {
-
-    throw new Error(
-      "ยังไม่ได้ตั้งค่า AI Gateway URL"
-    );
-
-  }
-
-
-  const response =
-    await fetch(
-      AI_GATEWAY_URL,
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type":
-            "application/json"
-        },
-
-        body: JSON.stringify({
-          text: text
-        })
-
-      }
-    );
-
-
-  if (!response.ok) {
-
-    throw new Error(
-      "AI Gateway HTTP "
-      + response.status
-    );
-
-  }
-
-
-  const result =
-    await response.json();
-
-
-  return result;
-
-}
-
-
-/* =========================================================
-   EXECUTE AI ACTIONS
-========================================================= */
-
-async function executeActions(
-  actions
-) {
-
-  const results = [];
-
-
-  for (
-    const action of actions
-  ) {
-
-    switch(action.action) {
-
-
-      /* LED ON */
-
-      case "led_on":
-
-        try {
-
-          const result =
-            await controlLED("on");
-
-          results.push(
-            "เปิดไฟแล้ว"
-          );
-
-          addCommandLog(
-            "💡 เปิดไฟ"
-          );
-
-        }
-
-        catch(error) {
-
-          results.push(
-            "เปิดไฟไม่สำเร็จ: "
-            + error.message
-          );
-
-        }
-
-        break;
-
-
-      /* LED OFF */
-
-      case "led_off":
-
-        try {
-
-          const result =
-            await controlLED("off");
-
-          results.push(
-            "ปิดไฟแล้ว"
-          );
-
-          addCommandLog(
-            "💡 ปิดไฟ"
-          );
-
-        }
-
-        catch(error) {
-
-          results.push(
-            "ปิดไฟไม่สำเร็จ: "
-            + error.message
-          );
-
-        }
-
-        break;
-
-    }
-
-  }
-
-  return results;
-
-}
-
-
-/* =========================================================
-   HANDLE COMMAND
-========================================================= */
-
-async function handleCommand(text) {
-
-  if (!text)
-    return;
-
-
-  aiReply.textContent =
-    "🤖 กำลังตีความคำสั่ง...";
-
-  sendBtn.disabled = true;
-
-
-  try {
-
-    const result =
-      await interpretCommand(text);
-
-
-    /*
-      รูปแบบที่ Gateway ควรส่งกลับ:
-
-      {
-        "actions": [
-          {
-            "action": "led_on"
-          }
-        ],
-        "reply_th":
-          "เปิดไฟให้แล้วค่ะ"
-      }
-    */
-
-
-    if (
-      !result.actions ||
-      !Array.isArray(result.actions)
-    ) {
-
-      throw new Error(
-        "AI ส่งข้อมูลไม่ถูกต้อง"
-      );
-
-    }
-
-
-    const allowedActions = [
-
-      "led_on",
-      "led_off"
-
-    ];
-
-
-    const safeActions =
-      result.actions.filter(
-        action =>
-          allowedActions.includes(
-            action.action
-          )
-      );
-
-
-    const results =
-      await executeActions(
-        safeActions
-      );
-
-
-    let reply =
-      result.reply_th || "";
-
-
-    if (!reply) {
-
-      reply =
-        results.join(" · ");
-
-    }
-
-
-    aiReply.innerHTML =
-      `<strong>${escapeHTML(reply)}</strong>`;
-
-
-  
-  }
-
-  catch(error) {
-
-    aiReply.textContent =
-      "❌ "
-      + error.message;
-
-  }
-
-  finally {
-
-    sendBtn.disabled = false;
-
-  }
-
-}
-
-
-/* =========================================================
-   SEND BUTTON
-========================================================= */
-
-sendBtn.addEventListener(
-  "click",
-  () => {
-
-    const text =
-      cmdInput.value.trim();
-
-    cmdInput.value = "";
-
-    handleCommand(text);
-
-  }
-);
-
-
-/* ENTER */
-
-cmdInput.addEventListener(
-  "keydown",
-  event => {
-
-    if (
-      event.key === "Enter"
-    ) {
-
-      event.preventDefault();
-
-      const text =
-        cmdInput.value.trim();
-
-      cmdInput.value = "";
-
-      handleCommand(text);
-
-    }
-
-  }
-);
-
-
-/* =========================================================
-   VOICE RECOGNITION
-========================================================= */
-
-const SpeechRecognition =
-  window.SpeechRecognition ||
-  window.webkitSpeechRecognition;
-
-
-let recognizer = null;
-
-
-if (SpeechRecognition) {
-
-  recognizer =
-    new SpeechRecognition();
-
-
-  recognizer.lang =
-    "th-TH";
-
-
-  recognizer.interimResults =
-    false;
-
-
-  recognizer.maxAlternatives =
-    1;
-
-
-  recognizer.continuous =
-    false;
-
-
-  recognizer.onstart =
-    () => {
-
-      micBtn.classList.add(
-        "listening"
-      );
-
-      voiceStatus.textContent =
-        "🔴 กำลังฟัง... พูดคำสั่งได้เลย";
-
-    };
-
-
-  recognizer.onresult =
-    event => {
-
-      const transcript =
-        event.results[0][0]
-          .transcript;
-
-
-      cmdInput.value =
-        transcript;
-
-
-      voiceStatus.textContent =
-        `ได้ยิน: "${transcript}"`;
-
-
-      handleCommand(
-        transcript
-      );
-
-    };
-
-
-  recognizer.onend =
-    () => {
-
-      micBtn.classList.remove(
-        "listening"
-      );
-
-    };
-
-
-  recognizer.onerror =
-    event => {
-
-      micBtn.classList.remove(
-        "listening"
-      );
-
-
-      voiceStatus.textContent =
-        "เกิดข้อผิดพลาดในการรับเสียง: "
-        + event.error;
-
-    };
-
-
-  micBtn.addEventListener(
-    "click",
-    () => {
-
-      try {
-
-        recognizer.start();
-
-      }
-
-      catch(error) {
-
-        console.log(error);
-
-      }
-
-    }
-  );
-
-}
-
-else {
-
-  micBtn.disabled =
-    true;
-
-  voiceStatus.textContent =
-    "เบราว์เซอร์นี้ไม่รองรับ Voice Recognition กรุณาใช้ Chrome";
-
-}
+let currentCommand = "unknown";
 
 
 /* =========================================================
    LOG
 ========================================================= */
 
-function addLogEntry(
-  type,
-  count
-) {
+function log(message) {
 
-  const empty =
-    logList.querySelector(
-      ".log-empty"
+    const logBox = document.getElementById("log");
+
+    const time = new Date().toLocaleTimeString();
+
+    logBox.innerHTML +=
+        `[${time}] ${message}<br>`;
+
+    logBox.scrollTop = logBox.scrollHeight;
+}
+
+
+/* =========================================================
+   SAVE SETTINGS
+========================================================= */
+
+function saveSettings() {
+
+    API_KEY =
+        document.getElementById("apiKey").value.trim();
+
+    ESP32_URL =
+        document.getElementById("esp32Url").value.trim();
+
+    if (!API_KEY) {
+
+        alert("กรุณาใส่ Gemini API Key");
+
+        return;
+    }
+
+    if (!ESP32_URL) {
+
+        alert("กรุณาใส่ IP / URL ของ ESP32");
+
+        return;
+    }
+
+    // ลบ / ท้าย URL
+    ESP32_URL =
+        ESP32_URL.replace(/\/+$/, "");
+
+    localStorage.setItem(
+        "gemini_api_key",
+        API_KEY
     );
 
-  if (empty)
-    empty.remove();
-
-
-  const li =
-    document.createElement("li");
-
-
-  const time =
-    new Date()
-      .toLocaleTimeString(
-        "th-TH",
-        {
-          hour12: false
-        }
-      );
-
-
-  const eventText =
-    type === "in"
-      ? `🚶 มีคนเข้า → รวม ${count} คน`
-      : `🚶 มีคนออก → รวม ${count} คน`;
-
-
-  li.innerHTML = `
-
-    <span class="log-time">
-      ${time}
-    </span>
-
-    <span>
-      ${eventText}
-    </span>
-
-  `;
-
-
-  logList.prepend(li);
-
-
-  while (
-    logList.children.length > 8
-  ) {
-
-    logList.removeChild(
-      logList.lastChild
+    localStorage.setItem(
+        "esp32_url",
+        ESP32_URL
     );
 
-  }
+    log("บันทึกการตั้งค่าแล้ว");
+
+    alert("บันทึกการตั้งค่าเรียบร้อย");
+}
+
+
+/* =========================================================
+   LOAD SETTINGS
+========================================================= */
+
+function loadSettings() {
+
+    API_KEY =
+        document.getElementById("apiKey").value.trim();
+
+    ESP32_URL =
+        document.getElementById("esp32Url").value.trim();
+
+    ESP32_URL =
+        ESP32_URL.replace(/\/+$/, "");
+}
+
+
+/* =========================================================
+   SPEECH RECOGNITION
+========================================================= */
+
+const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+
+let recognition;
+
+
+if (SpeechRecognition) {
+
+    recognition = new SpeechRecognition();
+
+    recognition.lang = "th-TH";
+
+    recognition.continuous = false;
+
+    recognition.interimResults = false;
+
+
+    recognition.onstart = function() {
+
+        const button =
+            document.getElementById("voiceButton");
+
+        button.classList.add("listening");
+
+        button.innerText =
+            "🔴 กำลังฟัง... พูดได้เลย";
+
+        log("กำลังฟังเสียง");
+
+    };
+
+
+    recognition.onresult = function(event) {
+
+        const text =
+            event.results[0][0].transcript;
+
+        document.getElementById(
+            "speechText"
+        ).value = text;
+
+        log(
+            "ได้ยิน: " + text
+        );
+
+    };
+
+
+    recognition.onerror = function(event) {
+
+        log(
+            "Speech Error: " +
+            event.error
+        );
+
+    };
+
+
+    recognition.onend = function() {
+
+        const button =
+            document.getElementById("voiceButton");
+
+        button.classList.remove("listening");
+
+        button.innerText =
+            "🎤 กดเพื่อพูด";
+
+    };
 
 }
 
 
-/* COMMAND LOG */
+function startVoice() {
 
-function addCommandLog(
-  text
-) {
+    if (!recognition) {
 
-  const empty =
-    logList.querySelector(
-      ".log-empty"
-    );
+        alert(
+            "Browser นี้ไม่รองรับ Speech Recognition\n\n" +
+            "แนะนำให้ใช้ Google Chrome"
+        );
 
-  if (empty)
-    empty.remove();
+        return;
+    }
 
-
-  const li =
-    document.createElement("li");
-
-
-  const time =
-    new Date()
-      .toLocaleTimeString(
-        "th-TH",
-        {
-          hour12: false
-        }
-      );
-
-
-  li.innerHTML = `
-
-    <span class="log-time">
-      ${time}
-    </span>
-
-    <span>
-      ${escapeHTML(text)}
-    </span>
-
-  `;
-
-
-  logList.prepend(li);
-
-
-  while (
-    logList.children.length > 8
-  ) {
-
-    logList.removeChild(
-      logList.lastChild
-    );
-
-  }
+    recognition.start();
 
 }
 
 
 /* =========================================================
-   SECURITY
+   SEND TEXT TO GEMINI
 ========================================================= */
 
-function escapeHTML(text) {
+async function sendToAI() {
 
-  const div =
-    document.createElement("div");
+    loadSettings();
 
-  div.textContent =
-    text;
+    const text =
+        document.getElementById(
+            "speechText"
+        ).value.trim();
 
-  return div.innerHTML;
+
+    if (!API_KEY) {
+
+        alert(
+            "กรุณาใส่ Gemini API Key ก่อน"
+        );
+
+        return;
+    }
+
+
+    if (!text) {
+
+        alert(
+            "กรุณาพูดหรือพิมพ์คำสั่งก่อน"
+        );
+
+        return;
+    }
+
+
+    log(
+        "ส่งข้อความให้ Gemini: " +
+        text
+    );
+
+
+    document.getElementById(
+        "aiText"
+    ).innerText = text;
+
+
+    document.getElementById(
+        "aiCommand"
+    ).innerText = "กำลังคิด...";
+
+
+    try {
+
+        /*
+         * Gemini API
+         *
+         * ใช้ REST API โดยตรง
+         */
+
+        const url =
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="
+            + encodeURIComponent(API_KEY);
+
+
+        const prompt = `
+
+คุณเป็น AI สำหรับควบคุมระบบไฟในห้องด้วย ESP32
+
+ผู้ใช้จะพูดภาษาไทยหรือภาษาอังกฤษ
+
+หน้าที่ของคุณคือวิเคราะห์ว่าผู้ใช้ต้องการ:
+
+ON = เปิดไฟ
+
+OFF = ปิดไฟ
+
+UNKNOWN = ไม่เกี่ยวกับการเปิดหรือปิดไฟ
+
+ตอบกลับเป็น JSON เท่านั้น ห้ามใส่ Markdown
+
+รูปแบบ:
+
+{
+  "command": "on",
+  "reason": "ผู้ใช้ต้องการเปิดไฟ"
+}
+
+หรือ
+
+{
+  "command": "off",
+  "reason": "ผู้ใช้ต้องการปิดไฟ"
+}
+
+หรือ
+
+{
+  "command": "unknown",
+  "reason": "คำสั่งไม่เกี่ยวกับไฟ"
+}
+
+คำสั่งของผู้ใช้:
+
+${text}
+
+`;
+
+
+        const response =
+            await fetch(url, {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    contents: [
+
+                        {
+                            parts: [
+
+                                {
+                                    text: prompt
+                                }
+
+                            ]
+                        }
+
+                    ],
+
+                    generationConfig: {
+
+                        temperature: 0,
+
+                        responseMimeType:
+                            "application/json"
+
+                    }
+
+                })
+
+            });
+
+
+        if (!response.ok) {
+
+            const errorText =
+                await response.text();
+
+            throw new Error(
+                "Gemini HTTP " +
+                response.status +
+                ": " +
+                errorText
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const resultText =
+            data.candidates?.[0]
+                ?.content?.parts?.[0]
+                ?.text;
+
+
+        if (!resultText) {
+
+            throw new Error(
+                "Gemini ไม่ส่งผลลัพธ์กลับมา"
+            );
+
+        }
+
+
+        log(
+            "Gemini ตอบ: " +
+            resultText
+        );
+
+
+        let result;
+
+
+        try {
+
+            result =
+                JSON.parse(resultText);
+
+        } catch (e) {
+
+            /*
+             * เผื่อ AI ส่ง Markdown
+             */
+
+            const clean =
+                resultText
+                    .replace(/```json/gi, "")
+                    .replace(/```/g, "")
+                    .trim();
+
+            result =
+                JSON.parse(clean);
+
+        }
+
+
+        currentCommand =
+            result.command;
+
+
+        document.getElementById(
+            "aiCommand"
+        ).innerText =
+            result.command.toUpperCase();
+
+
+        document.getElementById(
+            "aiReason"
+        ).innerText =
+            result.reason || "-";
+
+
+        if (
+            result.command === "on" ||
+            result.command === "off"
+        ) {
+
+            log(
+                "AI วิเคราะห์คำสั่ง = " +
+                result.command
+            );
+
+        } else {
+
+            log(
+                "AI ไม่พบคำสั่งเปิด/ปิดไฟ"
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        log(
+            "AI Error: " +
+            error.message
+        );
+
+        document.getElementById(
+            "aiCommand"
+        ).innerText = "ERROR";
+
+        alert(
+            "เกิดข้อผิดพลาดในการเรียก Gemini\n\n" +
+            error.message
+        );
+
+    }
 
 }
+
+
+/* =========================================================
+   EXECUTE AI COMMAND
+========================================================= */
+
+async function executeCurrentCommand() {
+
+    if (
+        currentCommand !== "on" &&
+        currentCommand !== "off"
+    ) {
+
+        alert(
+            "ยังไม่มีคำสั่ง ON/OFF จาก AI"
+        );
+
+        return;
+    }
+
+
+    await controlLED(
+        currentCommand
+    );
+
+}
+
+
+/* =========================================================
+   CONTROL ESP32 LED
+========================================================= */
+
+async function controlLED(state) {
+
+    loadSettings();
+
+
+    if (!ESP32_URL) {
+
+        alert(
+            "กรุณาใส่ IP / URL ของ ESP32"
+        );
+
+        return;
+    }
+
+
+    const url =
+        ESP32_URL +
+        "/led?state=" +
+        encodeURIComponent(state);
+
+
+    log(
+        "ส่งคำสั่ง ESP32: " +
+        state
+    );
+
+
+    try {
+
+        const response =
+            await fetch(url, {
+
+                method: "GET",
+
+                cache: "no-cache"
+
+            });
+
+
+        const text =
+            await response.text();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "ESP32 HTTP " +
+                response.status +
+                ": " +
+                text
+            );
+
+        }
+
+
+        log(
+            "ESP32 ตอบกลับ: " +
+            text
+        );
+
+
+        await checkESP32();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        log(
+            "ESP32 Error: " +
+            error.message
+        );
+
+        setESP32Offline();
+
+
+        alert(
+            "ไม่สามารถเชื่อมต่อ ESP32 ได้\n\n" +
+            "ตรวจสอบว่า:\n" +
+            "1. ESP32 เปิดอยู่\n" +
+            "2. คอมกับ ESP32 อยู่ Wi-Fi เดียวกัน\n" +
+            "3. IP ESP32 ถูกต้อง\n\n" +
+            error.message
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   CHECK ESP32 STATUS
+========================================================= */
+
+async function checkESP32() {
+
+    loadSettings();
+
+
+    if (!ESP32_URL) {
+
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                ESP32_URL +
+                "/status",
+                {
+                    method: "GET",
+                    cache: "no-cache"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP " +
+                response.status
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        setESP32Online();
+
+
+        document.getElementById(
+            "peopleCount"
+        ).innerText =
+            data.peopleCount ?? "-";
+
+
+        if (
+            data.led === "on"
+        ) {
+
+            document.getElementById(
+                "ledStatus"
+            ).innerText =
+                "🟢 ON";
+
+        } else {
+
+            document.getElementById(
+                "ledStatus"
+            ).innerText =
+                "⚫ OFF";
+
+        }
+
+
+        log(
+            "ESP32 Online | คนในห้อง = " +
+            (data.peopleCount ?? "-") +
+            " | LED = " +
+            (data.led ?? "-")
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        setESP32Offline();
+
+    }
+
+}
+
+
+/* =========================================================
+   ESP32 ONLINE
+========================================================= */
+
+function setESP32Online() {
+
+    const element =
+        document.getElementById(
+            "espStatus"
+        );
+
+    element.innerText =
+        "🟢 Online";
+
+    element.className =
+        "status-value online";
+
+}
+
+
+/* =========================================================
+   ESP32 OFFLINE
+========================================================= */
+
+function setESP32Offline() {
+
+    const element =
+        document.getElementById(
+            "espStatus"
+        );
+
+    element.innerText =
+        "🔴 Offline";
+
+    element.className =
+        "status-value offline";
+
+}
+
+
+/* =========================================================
+   AUTO CHECK
+========================================================= */
+
+setInterval(
+    checkESP32,
+    3000
+);
 
 
 /* =========================================================
    START
 ========================================================= */
 
-loadConfig();
+log(
+    "ระบบเว็บ AI เริ่มทำงาน"
+);
+
+checkESP32();
 
 </script>
 
