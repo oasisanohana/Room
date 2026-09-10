@@ -377,6 +377,9 @@
     </div>
     <div class="label" id="countLabel">คนในห้องตอนนี้</div>
     <div class="updated mono" id="updatedAt">ยังไม่มีข้อมูล</div>
+    <div class="led-status mono" id="ledStatusText" style="margin-top:10px; font-size:12px; color:var(--mute);">
+      ไฟ: – &nbsp;|&nbsp; คำสั่งเว็บ (order_web): – &nbsp;|&nbsp; มีคน (led): –
+    </div>
   </section>
 
   <section class="diagram">
@@ -406,7 +409,6 @@
 
   <section class="voice">
     <p class="hint">กดปุ่มแล้วพูดคำสั่ง เช่น "มีคนอยู่กี่คน" หรือ "เปิดไฟ"</p>
-    <div id="mixedContentWarning" class="row sys" style="display:none; border-color:var(--danger); color:var(--danger); margin-bottom:16px;"></div>
     <div class="mic-row">
       <button class="mic-btn" id="micBtn" aria-label="กดพูดคำสั่ง">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
@@ -427,7 +429,7 @@
 <div class="overlay" id="overlay">
   <div class="modal">
     <h2>ตั้งค่าการเชื่อมต่อ</h2>
-    <p class="sub">ค่า Supabase ใช้สำหรับอ่านจำนวนคน ค่า IP ของ ESP32 ใช้สำหรับสั่งเปิด/ปิดไฟผ่านเสียง (ต้องอยู่เครือข่ายเดียวกัน)</p>
+    <p class="sub">ค่า Supabase ใช้ทั้งอ่านจำนวนคน/สถานะไฟ และเขียนคำสั่งเปิด/ปิดไฟ (order_web) เวลาสั่งด้วยเสียง — ไม่ต้องอยู่เครือข่ายเดียวกับ ESP32 เพราะคุยผ่าน Supabase ทั้งหมด</p>
 
     <div class="field">
       <label for="cfgUrl">Supabase URL (endpoint room_status)</label>
@@ -436,10 +438,6 @@
     <div class="field">
       <label for="cfgKey">Supabase anon key</label>
       <input type="text" id="cfgKey" spellcheck="false">
-    </div>
-    <div class="field">
-      <label for="cfgIp">IP ของ ESP32 ในเครือข่าย (ไม่บังคับ)</label>
-      <input type="text" id="cfgIp" placeholder="เช่น 192.168.1.50" spellcheck="false">
     </div>
     <div class="field">
       <label for="cfgApiKey">Gemini API key</label>
@@ -460,12 +458,13 @@
   const DEFAULT_CONFIG = {
     url: "https://occeyborcnyuahfimlzg.supabase.co/rest/v1/room_status?id=eq.1",
     key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jY2V5Ym9yY255dWFoZmltbHpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNDc1MjYsImV4cCI6MjEwMzgyMzUyNn0.jU_kAg7HB7HIkKFCVgKGoLyKO-aCXJTL94Ov1YZJ20E",
-    ip: "",
     apiKey: ""
   };
 
   let config = { ...DEFAULT_CONFIG };
   let lastCount = null;
+  let lastLed = null;       // true = มีคนในห้อง (count > 0), มาจาก Supabase
+  let lastOrderWeb = null;  // true = สั่งเปิดไฟไว้ (ค่าเริ่มต้น = true), มาจาก Supabase
   let pollTimer = null;
 
   const el = (id) => document.getElementById(id);
@@ -484,16 +483,13 @@
     }
     el('cfgUrl').value = config.url;
     el('cfgKey').value = config.key;
-    el('cfgIp').value = config.ip;
     el('cfgApiKey').value = config.apiKey || "";
-    checkMixedContentRisk();
   }
 
   async function saveConfig(){
     config = {
       url: el('cfgUrl').value.trim() || DEFAULT_CONFIG.url,
       key: el('cfgKey').value.trim() || DEFAULT_CONFIG.key,
-      ip: el('cfgIp').value.trim(),
       apiKey: el('cfgApiKey').value.trim()
     };
     try{
@@ -503,7 +499,6 @@
     }
     closeModal();
     restartPolling();
-    checkMixedContentRisk();
   }
 
   // ---------------- modal ----------------
@@ -556,6 +551,19 @@
     el('updatedAt').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH');
   }
 
+  // led = มีคนในห้องไหม (count > 0), order_web = สั่งเปิดไฟไว้ไหม
+  // ไฟจะติดจริงก็ต่อเมื่อทั้งสองค่าเป็น true พร้อมกันเท่านั้น
+  function updateLedStatus(led, orderWeb){
+    lastLed = led;
+    lastOrderWeb = orderWeb;
+    const physicalOn = !!led && !!orderWeb;
+    const fmt = (v) => v === null || v === undefined ? '–' : (v ? 'เปิด' : 'ปิด');
+    el('ledStatusText').textContent =
+      'ไฟ: ' + (physicalOn ? 'ติด' : 'ดับ') +
+      ' | คำสั่งเว็บ (order_web): ' + fmt(orderWeb) +
+      ' | มีคน (led): ' + fmt(led);
+  }
+
   async function pollOnce(){
     try{
       const res = await fetch(config.url, {
@@ -568,6 +576,7 @@
       const data = await res.json();
       if(Array.isArray(data) && data.length > 0 && typeof data[0].count === 'number'){
         updateCount(data[0].count);
+        updateLedStatus(data[0].led, data[0].order_web);
         setStatus(true);
       } else {
         setStatus(false);
@@ -659,8 +668,11 @@
       'ตอบเป็นภาษาไทย กระชับ ไม่เกิน 2 ประโยค ' +
       'ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นนอก JSON ' +
       'รูปแบบ: {"reply": "ข้อความที่จะพูดตอบผู้ใช้", "action": "led_on" | "led_off" | "none"} ' +
-      'ใช้ action = led_on เมื่อผู้ใช้ขอให้เปิดไฟ, led_off เมื่อขอให้ปิดไฟ, none สำหรับกรณีอื่น ' +
-      'ข้อมูลปัจจุบัน: จำนวนคนในห้องตอนนี้คือ ' + (lastCount === null ? 'ไม่ทราบ' : lastCount) + ' คน';
+      'ใช้ action = led_on เมื่อผู้ใช้ขอให้เปิดไฟ (จะไปตั้งค่า order_web = true), ' +
+      'led_off เมื่อขอให้ปิดไฟ (order_web = false), none สำหรับกรณีอื่น ' +
+      'หมายเหตุ: ไฟจะติดจริงได้ก็ต่อเมื่อมีคนในห้อง (count > 0) ด้วยเสมอ แม้ order_web จะเป็น true ' +
+      'ข้อมูลปัจจุบัน: จำนวนคนในห้องตอนนี้คือ ' + (lastCount === null ? 'ไม่ทราบ' : lastCount) + ' คน, ' +
+      'คำสั่งเปิดไฟล่าสุด (order_web) คือ ' + (lastOrderWeb === null ? 'ไม่ทราบ' : (lastOrderWeb ? 'เปิด' : 'ปิด'));
 
     if(!config.apiKey){
       addLog('sys', 'ยังไม่ได้ใส่ Gemini API key ในเมนูตั้งค่า ⚙️');
@@ -707,7 +719,7 @@
       speak(parsed.reply);
 
       if(parsed.action === 'led_on' || parsed.action === 'led_off'){
-        await sendLedCommand(parsed.action === 'led_on' ? 'on' : 'off');
+        await setOrderWeb(parsed.action === 'led_on');
       }
 
     }catch(e){
@@ -717,38 +729,33 @@
     }
   }
 
-  async function sendLedCommand(state){
-    if(!config.ip){
-      addLog('sys', 'ยังไม่ได้ตั้งค่า IP ของ ESP32 ในเมนูตั้งค่า จึงสั่งไฟไม่ได้');
-      return;
-    }
-    if(window.location.protocol === 'https:'){
-      addLog('sys', 'หน้านี้เปิดผ่าน HTTPS แต่ ESP32 เป็น HTTP เบราว์เซอร์จะบล็อก request นี้ตั้งแต่ต้น (Mixed Content) คำสั่งไฟจะไม่ถึงตัวเครื่องจริง ๆ ดูวิธีแก้ในคำแนะนำด้านล่างปุ่มไมค์');
-      return;
-    }
+  // ตั้งค่า order_web ลง Supabase โดยตรง (ไม่เรียก ESP32 ตรง ๆ)
+  // วิธีนี้เลี่ยงปัญหา Mixed Content ได้ เพราะเว็บ HTTPS คุยกับ
+  // Supabase (HTTPS) เท่านั้น ส่วน ESP32 จะไล่มาดึงค่านี้ไปอ่านเอง
+  // หมายเหตุ: ไฟจะติดจริงหรือไม่ ยังขึ้นกับว่ามีคนในห้อง (count > 0)
+  // ด้วยเสมอ ต่อให้ order_web = true
+  async function setOrderWeb(turnOn){
     try{
-      const res = await fetch('http://' + config.ip + '/led?state=' + state);
+      const res = await fetch(config.url, {
+        method: 'PATCH',
+        headers: {
+          apikey: config.key,
+          Authorization: 'Bearer ' + config.key,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal'
+        },
+        body: JSON.stringify({ order_web: turnOn })
+      });
       if(res.ok){
-        addLog('sys', 'สั่งไฟ' + (state === 'on' ? 'เปิด' : 'ปิด') + 'สำเร็จ');
+        addLog('sys', 'บันทึกคำสั่ง' + (turnOn ? 'เปิดไฟ' : 'ปิดไฟ') + ' (order_web=' + turnOn + ') ไปยัง Supabase แล้ว');
+        lastOrderWeb = turnOn;
+        pollOnce();
       } else {
         const msg = await res.text();
-        addLog('sys', 'ESP32 ปฏิเสธคำสั่ง: ' + msg);
+        addLog('sys', 'บันทึกคำสั่งไม่สำเร็จ: ' + msg);
       }
     }catch(e){
-      addLog('sys', 'ติดต่อ ESP32 ไม่ได้ ตรวจสอบว่าอยู่เครือข่ายเดียวกันและเบราว์เซอร์อนุญาตการเชื่อมต่อ http');
-    }
-  }
-
-  function checkMixedContentRisk(){
-    const banner = el('mixedContentWarning');
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if(window.location.protocol === 'https:' && !isLocalhost && config.ip){
-      banner.style.display = 'block';
-      banner.innerHTML =
-        '<span class="tag">คำเตือน</span>หน้านี้เปิดผ่าน HTTPS แต่ ESP32 ใช้ HTTP ธรรมดา คำสั่งเปิด/ปิดไฟจะไม่ทำงานเพราะเบราว์เซอร์บล็อกการเชื่อมต่อ (Mixed Content) ' +
-        'วิธีแก้: เปิดไฟล์ .html นี้แบบไฟล์ในเครื่อง (ดับเบิลคลิกเปิดตรง ๆ ไม่ผ่านเว็บโฮสต์) หรือรันผ่าน http://localhost แทน';
-    } else {
-      banner.style.display = 'none';
+      addLog('sys', 'ติดต่อ Supabase ไม่ได้ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
     }
   }
 
