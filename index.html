@@ -589,7 +589,7 @@
   function restartPolling(){
     if(pollTimer) clearInterval(pollTimer);
     pollOnce();
-    pollTimer = setInterval(pollOnce, 3000);
+    pollTimer = setInterval(pollOnce, 1000);
   }
 
   // ---------------- conversation log ----------------
@@ -749,6 +749,7 @@
       if(res.ok){
         addLog('sys', 'บันทึกคำสั่ง' + (turnOn ? 'เปิดไฟ' : 'ปิดไฟ') + ' (order_web=' + turnOn + ') ไปยัง Supabase แล้ว');
         lastOrderWeb = turnOn;
+        updateLedStatus(lastLed, lastOrderWeb); // อัปเดตหน้าจอทันที ไม่ต้องรอรอบ poll ถัดไป
         pollOnce();
       } else {
         const msg = await res.text();
