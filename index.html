@@ -406,6 +406,7 @@
 
   <section class="voice">
     <p class="hint">กดปุ่มแล้วพูดคำสั่ง เช่น "มีคนอยู่กี่คน" หรือ "เปิดไฟ"</p>
+    <div id="mixedContentWarning" class="row sys" style="display:none; border-color:var(--danger); color:var(--danger); margin-bottom:16px;"></div>
     <div class="mic-row">
       <button class="mic-btn" id="micBtn" aria-label="กดพูดคำสั่ง">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
@@ -485,6 +486,7 @@
     el('cfgKey').value = config.key;
     el('cfgIp').value = config.ip;
     el('cfgApiKey').value = config.apiKey || "";
+    checkMixedContentRisk();
   }
 
   async function saveConfig(){
@@ -501,6 +503,7 @@
     }
     closeModal();
     restartPolling();
+    checkMixedContentRisk();
   }
 
   // ---------------- modal ----------------
@@ -719,6 +722,10 @@
       addLog('sys', 'ยังไม่ได้ตั้งค่า IP ของ ESP32 ในเมนูตั้งค่า จึงสั่งไฟไม่ได้');
       return;
     }
+    if(window.location.protocol === 'https:'){
+      addLog('sys', 'หน้านี้เปิดผ่าน HTTPS แต่ ESP32 เป็น HTTP เบราว์เซอร์จะบล็อก request นี้ตั้งแต่ต้น (Mixed Content) คำสั่งไฟจะไม่ถึงตัวเครื่องจริง ๆ ดูวิธีแก้ในคำแนะนำด้านล่างปุ่มไมค์');
+      return;
+    }
     try{
       const res = await fetch('http://' + config.ip + '/led?state=' + state);
       if(res.ok){
@@ -729,6 +736,19 @@
       }
     }catch(e){
       addLog('sys', 'ติดต่อ ESP32 ไม่ได้ ตรวจสอบว่าอยู่เครือข่ายเดียวกันและเบราว์เซอร์อนุญาตการเชื่อมต่อ http');
+    }
+  }
+
+  function checkMixedContentRisk(){
+    const banner = el('mixedContentWarning');
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if(window.location.protocol === 'https:' && !isLocalhost && config.ip){
+      banner.style.display = 'block';
+      banner.innerHTML =
+        '<span class="tag">คำเตือน</span>หน้านี้เปิดผ่าน HTTPS แต่ ESP32 ใช้ HTTP ธรรมดา คำสั่งเปิด/ปิดไฟจะไม่ทำงานเพราะเบราว์เซอร์บล็อกการเชื่อมต่อ (Mixed Content) ' +
+        'วิธีแก้: เปิดไฟล์ .html นี้แบบไฟล์ในเครื่อง (ดับเบิลคลิกเปิดตรง ๆ ไม่ผ่านเว็บโฮสต์) หรือรันผ่าน http://localhost แทน';
+    } else {
+      banner.style.display = 'none';
     }
   }
 
